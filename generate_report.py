@@ -1,18 +1,3 @@
-"""
-Generate Report.py
-Retail Inventory Analytics — final academic PDF report generator.
-
-Run from the project root:
-    python "Generate Report.py"
-
-Install:
-    python -m pip install reportlab pandas openpyxl
-
-This script reads the project's existing cleaned CSV and charts. It does not
-train a forecasting model; it reports the supplied Demand Forecast values
-and the MAE calculation implemented in src/analysis.py.
-"""
-
 from pathlib import Path
 from datetime import datetime
 import os
@@ -33,9 +18,6 @@ from reportlab.platypus import (
     TableStyle, KeepTogether
 )
 
-# ---------------------------------------------------------------------------
-# PROJECT DETAILS — edit the institution name if needed.
-# ---------------------------------------------------------------------------
 PROJECT_TITLE = "INVENTORY DEMAND FORECASTING"
 PROJECT_SUBTITLE = "Inventory Demand Analysis and Forecasting Using Python"
 
@@ -81,7 +63,7 @@ DEPARTMENT = "Department of Computer Science and Engineering"
 ACADEMIC_YEAR = "2024-2028"
 
 BASE_DIR = Path(__file__).resolve().parent
-OUTPUT_PDF = BASE_DIR / "Retail_Inventory_Analytics_Final_Report_22_Pages_Expanded.pdf"
+OUTPUT_PDF = BASE_DIR / "Retail_Inventory_Analytics_Final_Report_22_Pages_Dashboard.pdf"
 
 CLEANED_CSV_CANDIDATES = [
     BASE_DIR / "data" / "cleandata" / "retail_store_inventory_cleaned.csv",
@@ -92,19 +74,16 @@ RAW_XLSX = BASE_DIR / "data" / "rawdata" / "retail_store_inventory_extended_mess
 OUTPUT_DIR = BASE_DIR / "outputs"
 
 CHARTS = [
-    ("01_category_revenue.png", "Revenue by Product Category"),
-    ("02_seasonal_units_distribution.png", "Units Sold by Seasonality"),
-    ("03_top_demand_products.png", "Top 10 Highest-Demand Products"),
-    ("04_demand_trend_7day_moving_avg.png", "Daily Demand and 7-Day Moving Average"),
-    ("05_forecast_vs_actual.png", "Provided Demand Forecast vs Actual Units Sold"),
-    ("06_high_demand_categories.png", "High-Demand Product Categories"),
-    ("07_region_revenue.png", "Revenue by Region"),
-    ("08_region_category_countplot.png", "Regional and Category Distribution"),
+    ("01_category_revenue.jpeg", "Revenue by Product Category"),
+    ("02_seasonal_units_distribution.jpeg", "Units Sold by Seasonality"),
+    ("03_top_demand_products.jpeg", "Top 10 Highest-Demand Products"),
+    ("04_demand_trend_7day_moving_avg.jpeg", "Daily Demand and 7-Day Moving Average"),
+    ("05_forecast_vs_actual.jpeg", "Provided Demand Forecast vs Actual Units Sold"),
+    ("06_high_demand_categories.jpeg", "High-Demand Product Categories"),
+    ("07_region_revenue.jpeg", "Revenue by Region"),
+    ("08_region_category_countplot.jpeg", "Regional and Category Distribution"),
 ]
 
-# ---------------------------------------------------------------------------
-# VISUAL STYLE
-# ---------------------------------------------------------------------------
 NAVY = colors.HexColor("#17324D")
 BLUE = colors.HexColor("#2C6EAA")
 PALE_BLUE = colors.HexColor("#EAF2F8")
@@ -160,9 +139,7 @@ styles.add(ParagraphStyle(
     fontSize=9, leading=12, textColor=NAVY, alignment=TA_CENTER,
 ))
 
-# ---------------------------------------------------------------------------
-# DATA LOADING AND METRICS
-# ---------------------------------------------------------------------------
+
 def find_dataset():
     for path in CLEANED_CSV_CANDIDATES:
         if path.exists():
@@ -284,9 +261,7 @@ def safe(text):
     return html.escape(str(text), quote=False)
 
 
-# ---------------------------------------------------------------------------
-# REPORTLAB HELPERS
-# ---------------------------------------------------------------------------
+
 def P(text, style="BodyReport"):
     return Paragraph(safe(text), styles[style])
 
@@ -369,7 +344,7 @@ def make_sample_table(rows, widths):
 def add_chart(story, filename, caption, max_w=16.5 * cm, max_h=10.4 * cm):
     path = OUTPUT_DIR / filename
     if not path.exists():
-        story.append(P(f"Chart not found: outputs/{filename}", "SmallReport"))
+        story.append(P(f"Chart image not found: {path.name}. Expected location: {path}", "SmallReport"))
         story.append(P("The report generator preserves the project content and continues without this image."))
         return
     img = Image(str(path))
@@ -380,33 +355,119 @@ def add_chart(story, filename, caption, max_w=16.5 * cm, max_h=10.4 * cm):
     story.append(P(caption, "SmallReport"))
 
 
+
 def draw_page(canvas, doc):
     canvas.saveState()
+
     w, h = A4
+
+    canvas.setStrokeColor(colors.HexColor("#D5DEE6"))
+    canvas.setLineWidth(0.5)
+    canvas.rect(
+        0.8 * cm,       # Left margin of border
+        0.8 * cm,       # Bottom margin of border
+        w - 1.6 * cm,   # Border width
+        h - 1.6 * cm,   # Border height
+        stroke=1,
+        fill=0
+    )
+
+    
+    logo_path = BASE_DIR / "logo.jpeg"
+
+    if logo_path.exists():
+        canvas.drawImage(
+            str(logo_path),
+            w - 4.5 * cm,
+            h - 1.8 * cm,
+            width=2.8 * cm,
+            height=1.5 * cm,
+            preserveAspectRatio=True,
+            anchor="c",
+            mask="auto"
+        )
+
+    # 3. Keep the existing header on pages after the cover
     if doc.page > 1:
         canvas.setStrokeColor(BORDER)
         canvas.setLineWidth(0.5)
-        canvas.line(1.7 * cm, h - 1.35 * cm, w - 1.7 * cm, h - 1.35 * cm)
+        canvas.line(
+            1.7 * cm, h - 1.35 * cm,
+            w - 1.7 * cm, h - 1.35 * cm
+        )
+
         canvas.setFont("Helvetica-Bold", 7.5)
         canvas.setFillColor(NAVY)
-        canvas.drawString(1.7 * cm, h - 1.08 * cm, "RETAIL INVENTORY ANALYTICS")
-        canvas.setFont("Helvetica", 7)
-        canvas.setFillColor(MID_GREY)
-        canvas.drawRightString(w - 1.7 * cm, h - 1.08 * cm, "FINAL PROJECT REPORT")
+        canvas.drawString(
+            1.7 * cm, h - 1.08 * cm,
+            "RETAIL INVENTORY ANALYTICS"
+        )
+
+    # 4. Keep the existing footer and page numbers
     canvas.setStrokeColor(BORDER)
-    canvas.line(1.7 * cm, 1.35 * cm, w - 1.7 * cm, 1.35 * cm)
+    canvas.setLineWidth(0.5)
+    canvas.line(
+        1.7 * cm, 1.35 * cm,
+        w - 1.7 * cm, 1.35 * cm
+    )
+
     canvas.setFont("Helvetica", 7)
     canvas.setFillColor(MID_GREY)
-    canvas.drawString(1.7 * cm, 0.98 * cm, "Inventory Demand Forecasting | Academic Project")
-    canvas.drawRightString(w - 1.7 * cm, 0.98 * cm, f"Page {doc.page}")
+
+    canvas.drawString(
+        1.7 * cm, 0.98 * cm,
+        "Inventory Demand Forecasting | Academic Project"
+    )
+
+    canvas.drawRightString(
+        w - 1.7 * cm, 0.98 * cm,
+        f"Page {doc.page}"
+    )
+
     canvas.restoreState()
 
 
-# ---------------------------------------------------------------------------
-# BUILD 22 SEPARATE REPORT SECTIONS/PAGES
-# Each section stays on its own page; short, section-specific discussion notes
-# use available space without changing the existing heading or body font sizes.
-# ---------------------------------------------------------------------------
+# def draw_page(canvas, doc):
+#     canvas.saveState()
+#     w, h = A4
+
+    # Medium logo in the top-right corner on every page; keep it inside margins.
+    # logo_path = BASE_DIR / "logo.jpeg"
+    # if logo_path.exists():
+    #     logo_width = 2.6 * cm
+    #     logo_height = 1.7 * cm
+    #     canvas.drawImage(
+    #         str(logo_path),
+    #         w - 1.7 * cm - logo_width,
+    #         h - 0.28 * cm - logo_height,
+    #         width=logo_width,
+    #         height=logo_height,
+    #         preserveAspectRatio=True,
+    #         anchor="c",
+    #         mask="auto",
+    #     )
+#         canvas.drawImage(
+#             str(logo_path),
+#             doc.leftMargin,
+#             A4[1] - logo_height - 15,
+#             width=logo_width,
+#             height=logo_height,
+#             preserveAspectRatio=True,
+#             mask="auto"
+# )
+
+    # No text in the top-left header area. Keep the existing footer and page number.
+    # canvas.setStrokeColor(BORDER)
+    # canvas.setLineWidth(0.5)
+    # canvas.line(1.7 * cm, 1.35 * cm, w - 1.7 * cm, 1.35 * cm)
+    # canvas.setFont("Helvetica", 7)
+    # canvas.setFillColor(MID_GREY)
+    # canvas.drawString(1.7 * cm, 0.98 * cm, "Inventory Demand Forecasting | Academic Project")
+    # canvas.drawRightString(w - 1.7 * cm, 0.98 * cm, f"Page {doc.page}")
+    # canvas.restoreState()
+
+
+
 def build_report():
     csv_path = find_dataset()
     df, _ = load_data(csv_path)
@@ -430,8 +491,7 @@ def build_report():
     def body(text):
         story.append(P(text))
 
-    # Small, human-written interpretation notes make use of otherwise empty
-    # space while staying relevant to each section. They do not alter fonts.
+
     page_notes = {
         2: "These statements clarify what the report covers and distinguish the work completed in the repository from work that has not been claimed. The final PDF should be checked against the submitted code and data before academic submission. Clear documentation also supports fair review: readers can distinguish implemented features from recommendations for later work, and can reproduce the calculations by following the repository instructions and using the same input files.",
         3: "In short, the project turns a large spreadsheet into information that is easier to inspect. Its value lies in making patterns visible and giving a reviewer a clear path from the source data to the reported results. The report therefore focuses on transparent methods and interpretable outputs rather than claiming a production-ready forecasting system. Its sections move from source data and preparation to metrics, visual evidence, practical implications and areas that need further validation.",
@@ -527,11 +587,7 @@ def build_report():
         "cleaned dataset, and existing visualization files as the source material for this report."
     )
     story.append(Spacer(1, 0.3 * cm))
-    # story.append(make_table([
-    #     # ["Student", "Signature", "Date"],
-    #     # [STUDENTS[0]["name"], "________________________", "____________"],
-    #     # [STUDENTS[1]["name"], "________________________", "____________"],
-    # ], [4.0 * cm, 7.0 * cm, 5.0 * cm]))
+   
     new_page()
 
     # PAGE 3 — ABSTRACT AND CONTENTS
@@ -583,7 +639,7 @@ def build_report():
     )
     subheading("Project Overview")
     body(
-        "The project, Retail Inventory Analytics, processes a retail inventory workbook covering "
+        "The project,Inventory Demand Forecasting, processes a retail inventory workbook covering "
         "2025–2026. Its pipeline separates data cleaning from analysis, saves a cleaned CSV, "
         "calculates business metrics and creates charts. A Streamlit dashboard presents key "
         "metrics, stock-status counts, charts and product-demand tables."
@@ -596,35 +652,76 @@ def build_report():
     body(
         "The repository is arranged so that source data, processing code, generated outputs and the dashboard are easy to locate. The raw workbook is kept separate from the cleaned CSV, while reusable cleaning and analysis logic lives in the src folder. This separation makes the workflow easier to maintain and helps reviewers trace each result back to its source."
     )
-    structure_rows = [
-        [Paragraph("<font color='#FFFFFF'><b>Inventory_Forecast-main/</b></font>", styles["SmallReport"])],
-        [Paragraph("├── data/", styles["SmallReport"])],
-        [Paragraph("│   ├── rawdata/  — original Excel workbook", styles["SmallReport"])],
-        [Paragraph("│   └── cleandata/  — cleaned CSV dataset", styles["SmallReport"])],
-        [Paragraph("├── src/", styles["SmallReport"])],
-        [Paragraph("│   ├── data_cleaning.py  — cleaning rules", styles["SmallReport"])],
-        [Paragraph("│   └── analysis.py  — metrics and charts", styles["SmallReport"])],
-        [Paragraph("├── outputs/  — charts and exported data", styles["SmallReport"])],
-        [Paragraph("├── main.py  — pipeline entry point", styles["SmallReport"])],
-        [Paragraph("├── dashboard.py  — Streamlit interface", styles["SmallReport"])],
-        [Paragraph("├── generate_report.py  — Reportlab", styles["SmallReport"])],
-        [Paragraph("├── Inventory_Demand_Forecasting.pdf ", styles["SmallReport"])],
-        [Paragraph("├── requirements.txt  — Python dependencies", styles["SmallReport"])],
-        [Paragraph("└── README.md  — setup and workflow notes", styles["SmallReport"])],
-    ]
-    structure = Table(structure_rows, colWidths=[16.0 * cm], hAlign="LEFT")
-    structure.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
-        ("BACKGROUND", (0, 1), (-1, -1), PALE_GREY),
-        ("BOX", (0, 0), (-1, -1), 0.6, BORDER),
-        ("INNERGRID", (0, 0), (-1, -1), 0.25, BORDER),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ("TOPPADDING", (0, 0), (-1, -1), 3),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ]))
-    story.append(structure)
+    # structure_rows = [
+    #     [Paragraph("<font color='#FFFFFF'><b>Inventory_Forecast-main/</b></font>", styles["SmallReport"])],
+    #     [Paragraph("├── data/", styles["SmallReport"])],
+    #     [Paragraph("│   ├── rawdata/  — original Excel workbook", styles["SmallReport"])],
+    #     [Paragraph("│   └── cleandata/  — cleaned CSV dataset", styles["SmallReport"])],
+    #     [Paragraph("├── src/", styles["SmallReport"])],
+    #     [Paragraph("│   ├── data_cleaning.py  — cleaning rules", styles["SmallReport"])],
+    #     [Paragraph("│   └── analysis.py  — metrics and charts", styles["SmallReport"])],
+    #     [Paragraph("├── outputs/  — charts and exported data", styles["SmallReport"])],
+    #     [Paragraph("├── main.py  — pipeline entry point", styles["SmallReport"])],
+    #     [Paragraph("├── dashboard.py  — Streamlit interface", styles["SmallReport"])],
+    #     [Paragraph("├── generate_report.py  — Reportlab", styles["SmallReport"])],
+    #     [Paragraph("├── Inventory_Demand_Forecasting.pdf ", styles["SmallReport"])],
+    #     [Paragraph("├── requirements.txt  — Python dependencies", styles["SmallReport"])],
+    #     [Paragraph("└── README.md  — setup and workflow notes", styles["SmallReport"])],
+    # ]
+
+    folder_tree = [
+            "Inventory_Forecast/",
+            "|-- .vscode",
+            "|-- data/",
+            "|   |-- cleandata/",
+            "|   |-- rawdata/",
+            "|-- src/",
+            "|   |-- data_cleaning.py",
+            "|   |-- analysis.py",
+            "|-- outputs/",
+            "|-- dashboard.py",
+            "|-- main.py",
+            "|-- generate_report.py",
+            "|-- logo.jpeg",
+            "|-- requirements.txt",
+            "|-- README.md",
+        ]
+
+    tree_text = "<br/>".join(
+        safe(line) for line in folder_tree
+    )
+
+    folder_tree_paragraph = Paragraph(
+        tree_text,
+        ParagraphStyle(
+            "FolderTree",
+            parent=styles["BodyReport"],
+            fontName="Courier",
+            fontSize=9,
+            leading=14,
+            textColor=colors.black,
+            leftIndent=18,
+            spaceBefore=4,
+            spaceAfter=8,
+        )
+    )
+
+    story.append(folder_tree_paragraph)
+
+    
+    # structure = Table(structure_rows, colWidths=[16.0 * cm], hAlign="LEFT")
+    # structure.setStyle(TableStyle([
+    #     ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+    #     ("BACKGROUND", (0, 1), (-1, -1), PALE_GREY),
+    #     ("BOX", (0, 0), (-1, -1), 0.6, BORDER),
+    #     ("INNERGRID", (0, 0), (-1, -1), 0.25, BORDER),
+    #     ("LEFTPADDING", (0, 0), (-1, -1), 8),
+    #     ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+    #     ("TOPPADDING", (0, 0), (-1, -1), 3),
+    #     ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+    #     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    # ]))
+    # story.append(structure)
     new_page()
 
     # PAGE 5 — PROBLEM AND OBJECTIVES
@@ -716,7 +813,7 @@ def build_report():
 
     subheading("First Six Rows of the Raw Dataset")
     body(
-        "The following preview shows the first six records from the original raw Excel workbook. "
+        "The following preview shows the first six records from the original raw dataset. "
         "The columns are split into two compact tables so that all source fields remain visible."
     )
     raw_path = RAW_XLSX
@@ -812,6 +909,7 @@ def build_report():
     body(
         "The README identifies main.py as the recommended entry point. It coordinates the cleaning stage, writes the cleaned dataset, runs the analysis, and refreshes the saved visual outputs. The dashboard then presents selected results for exploration, while this PDF documents the process, interpretation and limitations. Each stage can also be inspected separately when debugging or validating an output."
     )
+
     flow_rows = [
         [Paragraph("<b>Source Excel</b><br/>data/rawdata/", styles["CenterReport"])],
         [Paragraph("<b>Clean & standardize</b><br/>src/data_cleaning.py", styles["CenterReport"])], 
@@ -837,6 +935,7 @@ def build_report():
         "Total Revenue = Units Sold × Price × (1 − Discount / 100)",
         styles["CenterReport"]
     ))
+
     body(
         "The formula applies the discount percentage to the row-level price and multiplies by units sold. "
         "The repository notes that this calculation does not account for taxes, returns, shipping or "
@@ -1050,7 +1149,71 @@ def build_report():
     )
     new_page()
 
-    # PAGE 19 — STOCK STATUS
+    # PAGE 19 — DASHBOARD VISUALIZATION (both dashboard screenshots on one page)
+    heading("Dashboard Visualization")
+    body(
+        "The dashboard brings together key inventory indicators, demand summaries and visual comparisons "
+        "in one interface. The screenshots below show the project's dashboard views."
+    )
+
+    dashboard_specs = [
+  
+    (
+        "dashboard1.jpeg",
+        "Figure 9. Dashboard overview showing key inventory and demand indicators."
+    ),
+    (
+        "dashboard2.jpeg",
+        "Figure 10. Dashboard view showing additional analytical visualizations."
+    ),
+]
+
+
+    dashboard_cells = []
+
+    for image_name, caption in dashboard_specs:
+        image_path = OUTPUT_DIR / image_name
+
+        if image_path.exists():
+            dash_img = Image(str(image_path))
+            dash_img._restrictSize(16.0 * cm, 8.2 * cm)
+            dash_img.hAlign = "CENTER"
+
+            dashboard_cells.append([
+                dash_img,
+                Paragraph(safe(caption), styles["SmallReport"]),
+                Spacer(1, 8)
+            ])
+        else:
+            dashboard_cells.append([
+                Paragraph(
+                    safe(f"Dashboard image not found: outputs/{image_name}"),
+                    styles["SmallReport"]
+                ),
+                Paragraph(safe(caption), styles["SmallReport"]),
+                Spacer(1, 8)
+            ])
+
+    dashboard_table = Table(
+        [[dashboard_cells[0]], [dashboard_cells[1]]],
+        colWidths=[16.0 * cm],
+        hAlign="CENTER"
+    )
+
+    dashboard_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 2),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+    ]))
+
+    story.append(dashboard_table)
+
+    new_page()
+
+    # PAGE 20 — STOCK STATUS AND FINDINGS (combined to preserve the 22-page limit)
     heading("19. Product-Level Inventory Status")
     under = int((ps["Stock_Status"] == "Under-stocked").sum())
     optimal = int((ps["Stock_Status"] == "Optimal").sum())
@@ -1063,7 +1226,7 @@ def build_report():
     ], [3.2 * cm, 2.8 * cm, 9.2 * cm]))
     subheading("Product Summary — Highest Demand")
     rows = [["Product ID", "Total Demand", "Avg Demand", "Mean Inventory", "Status"]]
-    for _, r in m["top_products"].head(10).iterrows():
+    for _, r in m["top_products"].head(5).iterrows():
         rows.append([
             str(r["Product ID"]), fmt(r["Total_Demand"], 0),
             fmt(r["Average_Daily_Demand"]), fmt(r["Current_Inventory"]),
@@ -1076,10 +1239,7 @@ def build_report():
         "formal replenishment rules. Real inventory policies should account for lead time, safety stock, "
         "service level, stockouts and replenishment frequency."
     )
-    new_page()
-
-    # PAGE 20 — FINDINGS
-    heading("20. Findings and Business Insights")
+    subheading("20. Findings and Business Insights")
     subheading("Findings from the Implemented Analysis")
     story.extend(bullets([
         f"The selected data file contains {m['rows']:,} records and {m['columns']:,} columns.",
@@ -1138,7 +1298,7 @@ def build_report():
     heading("22. Conclusion and References")
     subheading("Conclusion")
     body(
-        "The Retail Inventory Analytics project demonstrates a practical Python workflow for cleaning "
+        "The Inventory Demand Forecasting project demonstrates a practical Python workflow for cleaning "
         "retail records, summarizing product demand, calculating revenue, reviewing inventory indicators, "
         "comparing supplied forecasts with observed sales, and communicating patterns through charts and "
         "a Streamlit dashboard. The analysis is organized into reproducible steps and can be rerun when "
@@ -1168,7 +1328,9 @@ def build_report():
 
     subheading("GitHub Repository")
     references = [
-        "Github Repo Link : "
+        "Github Repo Link : https://github.com/adarshraj2609/Inventory_Forecast",
+        "Streamlit Link : https://inventoryforecast-ljddjdvf9ag6lead2lpprb.streamlit.app/"
+        
     ]
     story.extend(bullets(references))
     story.append(Spacer(1, 0.2 * cm))
