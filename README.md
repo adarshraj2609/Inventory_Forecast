@@ -1,10 +1,10 @@
 # Retail Inventory Analytics
 
-A Python analytics pipeline for cleaning retail inventory data, evaluating product demand and stock levels, comparing existing demand forecasts with observed sales, and exporting visual summaries.
+A Python analytics pipeline and Streamlit dashboard for cleaning retail inventory data, evaluating product demand and stock levels, comparing supplied demand forecasts with observed sales, and presenting the results through charts and a PDF report viewer.
 
 ## Project Overview
 
-This project processes a retail inventory workbook covering 2025–2026. It separates data preparation from analysis so that the input can be cleaned and standardized before business metrics and charts are generated.
+This project processes a retail inventory workbook covering 2025–2026. It separates data preparation from analysis so that the source data can be cleaned and standardized before business metrics and visual summaries are generated.
 
 The end-to-end workflow is:
 
@@ -12,11 +12,33 @@ The end-to-end workflow is:
 2. Remove duplicate records and clean selected date, category, price, inventory, sales, and discount values.
 3. Save the cleaned records as a CSV file.
 4. Calculate revenue, demand, inventory-risk indicators, and forecast error.
-5. Export six charts to the `outputs/` directory.
+5. Export analysis charts to the `outputs/` directory.
+6. Display the cleaned data and analysis results in the Streamlit dashboard.
+7. Open the final project PDF report from the dashboard's **Open Report** button.
+
+## Key Features
+
+### Data Pipeline
+
+- Reads the source Excel workbook.
+- Removes exact duplicate rows.
+- Standardizes selected text and date fields.
+- Handles invalid and missing values according to the project cleaning rules.
+- Exports a cleaned CSV file.
+- Calculates revenue, demand, stock-status indicators, and forecast MAE.
+
+### Streamlit Dashboard
+
+- Displays total revenue, units sold, average unit price, and forecast MAE.
+- Summarizes under-stocked, optimal, and over-stocked products.
+- Shows eight charts covering category revenue, seasonality, product demand, daily demand trends, forecast comparisons, and regional performance.
+- Provides tables for highest-demand products, lowest-demand products, and stock status.
+- Displays a **Cronus Consultants** welcome dialog with the seven project team members before the dashboard is used in a new Streamlit session.
+- Includes an **Open Report** button to display the project's PDF report inside the Streamlit app, plus a PDF download button.
 
 ## Analytical Questions
 
-The pipeline is designed to help explore:
+The pipeline and dashboard are designed to help explore:
 
 - How much revenue and sales volume are represented in the dataset?
 - Which product IDs have the highest and lowest recorded demand?
@@ -25,6 +47,7 @@ The pipeline is designed to help explore:
 - How closely do the provided demand forecasts match observed units sold?
 - Which products meet the project's under-stock or over-stock heuristics?
 - How are units sold distributed across seasonality labels?
+- How does revenue and transaction volume vary by region?
 
 ## Data and Assumptions
 
@@ -38,7 +61,7 @@ data/rawdata/retail_store_inventory_extended_messy_2025_2026.xlsx
 
 The analysis uses fields including `Date`, `Product ID`, `Category`, `Seasonality`, `Units Sold`, `Price`, `Discount`, `Inventory Level`, and `Demand Forecast`.
 
-### Cleaning rules
+### Cleaning Rules
 
 Implemented in `src/data_cleaning.py`:
 
@@ -52,9 +75,9 @@ Implemented in `src/data_cleaning.py`:
 | Prices above $1,000 | Values are treated as missing and filled using the median price for the corresponding category. |
 | Missing categories | Filled with `Uncategorized`. |
 
-These are project-specific rules, not universal retail accounting or inventory policies. In particular, the script does not currently impute every missing field in the workbook.
+These are project-specific rules, not universal retail accounting or inventory policies. The cleaning script does not currently impute every missing field in the workbook.
 
-### Metric definitions
+### Metric Definitions
 
 - **Total revenue:** `Units Sold × Price × (1 − Discount / 100)`, summed across rows. This uses the dataset's discount percentage; it does not account for taxes, returns, shipping, or other adjustments.
 - **Average unit price:** Mean of the row-level `Price` values; this is not weighted by units sold.
@@ -66,7 +89,9 @@ These are project-specific rules, not universal retail accounting or inventory p
 
 The analysis stage prints the financial summary, top and bottom demand products, stock-status counts, and forecast mean absolute error (MAE).
 
-Six charts are saved under `outputs/`:
+### Pipeline Charts
+
+The analysis pipeline exports six charts under `outputs/`:
 
 | File | Contents |
 | --- | --- |
@@ -77,20 +102,27 @@ Six charts are saved under `outputs/`:
 | `05_forecast_vs_actual.png` | Provided demand forecast compared with observed units sold |
 | `06_high_demand_categories.png` | Units sold by product category |
 
-### Example: Revenue by Category
+### Additional Dashboard Charts
 
-![Bar chart showing revenue by product category](outputs/01_category_revenue.png)
+The Streamlit dashboard also generates two regional charts in `outputs/`:
 
-The pipeline also writes the cleaned dataset to:
+| File | Contents |
+| --- | --- |
+| `07_region_revenue.png` | Revenue performance by region |
+| `08_region_category_countplot.png` | Transaction counts by region and product category |
+
+The pipeline writes the cleaned dataset to:
 
 ```text
 data/cleandata/retail_store_inventory_cleaned.csv
 ```
 
+The dashboard looks for the cleaned CSV in `data/cleandata/` first and then in `outputs/`.
+
 ## Repository Structure
 
 ```text
-Retail_inventory_analytics/
+Retail_Inventory_Analytics/
 ├── data/
 │   ├── rawdata/
 │   │   └── retail_store_inventory_extended_messy_2025_2026.xlsx
@@ -102,26 +134,41 @@ Retail_inventory_analytics/
 │   ├── 03_top_demand_products.png
 │   ├── 04_demand_trend_7day_moving_avg.png
 │   ├── 05_forecast_vs_actual.png
-│   └── 06_high_demand_categories.png
+│   ├── 06_high_demand_categories.png
+│   ├── 07_region_revenue.png
+│   └── 08_region_category_countplot.png
 ├── src/
 │   ├── analysis.py
 │   └── data_cleaning.py
+├── dashboard.py
 ├── main.py
 ├── requirements.txt
+├── Retail_Inventory_Analytics_Final_Report.pdf
 └── README.md
 ```
+
+The PDF report should be placed in the same directory as `dashboard.py`. The dashboard also contains a local Windows fallback path for the original development machine; that absolute path will not work on another computer. Keeping the PDF beside `dashboard.py` is the recommended portable setup.
 
 ## Requirements
 
 - Python 3
 - Packages listed in `requirements.txt`
 - The source workbook at the input path described above
+- The PDF report beside `dashboard.py` to use the in-app report viewer
 
-Install the dependencies from the project root:
+Install the project dependencies from the project root:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
+
+The dashboard's embedded PDF viewer uses Streamlit's `st.pdf()` feature. Install its optional PDF dependency with:
+
+```bash
+python -m pip install "streamlit[pdf]"
+```
+
+This command can also be added to the environment setup process if the dashboard is deployed to another machine. See the [Streamlit PDF viewer documentation](https://docs.streamlit.io/develop/api-reference/media/st.pdf) for details.
 
 If you have multiple Python installations, use the interpreter that will run the pipeline for both installation and execution. For example, in PowerShell:
 
@@ -131,13 +178,13 @@ D:\python.exe -m pip install -r requirements.txt
 
 ## Run the Full Pipeline
 
-From the project root:
+Run these commands from the project root:
 
 ```bash
 python main.py
 ```
 
-The entry point cleans the workbook, writes the cleaned CSV, runs the analysis, and saves the charts. Existing output files with the same names are overwritten.
+The entry point cleans the workbook, writes the cleaned CSV, runs the analysis, and saves the pipeline charts. Existing output files with the same names are overwritten.
 
 To run data cleaning or analysis separately, use:
 
@@ -148,22 +195,10 @@ python -m src.analysis
 
 The standalone analysis script looks for a cleaned CSV in `outputs/retail_store_inventory_cleaned.csv`, then `data/cleaned_retail_inventory_2025_2026.csv`; if neither exists, it tries the workbook at the project root. For the standard project input and output paths, `python main.py` is the recommended command.
 
-## Reproducibility and Limitations
+## Run the Streamlit Dashboard
 
-- Summary values depend on the input workbook and the cleaning rules above; they are not fixed project constants.
-- Median imputation can affect downstream totals and should be considered when interpreting results.
-- The stock-status multipliers are simple analytical heuristics and should be calibrated against lead times, service levels, and replenishment policies before operational use.
-- Forecast MAE is an aggregate error measure and does not by itself indicate forecast bias or performance by product, store, or season.
-- This repository is an analytical example, not a production inventory-control system. Validate business definitions and source data before using results for purchasing or financial decisions.
-
-## Simple Dashboard
-
-A basic Streamlit dashboard is available in `dashboard.py`. It displays the existing summary metrics and stock-status rules, charts for daily demand and its 7-day moving average, revenue by category, top-demand products, actual versus forecast demand, units sold by seasonality, units sold by category, and forecast comparisons. It also includes product-demand tables. The charts use the project's cleaned dataset; the existing cleaning and analysis pipeline is unchanged.
-
-Run these commands from the project root:
+After generating the cleaned CSV, start the dashboard from the project root:
 
 ```bash
-python -m pip install -r requirements.txt
-python main.py
 python -m streamlit run dashboard.py
 ```
