@@ -20,9 +20,9 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # PDF report location
 PDF_PATH_CANDIDATES = [
-    PROJECT_DIR / "Retail_Inventory_Analytics_Final_Report.pdf",
+    PROJECT_DIR / "Retail_Inventory_Analytics_Final_Report_22_Pages_Dashboard.pdf",
     Path(
-        r"C:\Users\HP\OneDrive\Desktop\Inventory_Demand_Forecasting\project\Inventory_Forecast\Retail_Inventory_Analytics_Final_Report.pdf"
+        r"C:\Users\HP\OneDrive\Desktop\Inventory_Demand_Forecasting\project\Inventory_Forecast\Retail_Inventory_Analytics_Final_Report_22_Pages_Dashboard.pdf"
     ),
 ]
 
