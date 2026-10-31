@@ -87,7 +87,7 @@ def run_data_analysis(df):
     plt.ylabel('Total Revenue ($)')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(output_dir / '01_category_revenue.png')
+    plt.savefig(output_dir / '01_category_revenue.jpeg')
     plt.show()
     plt.close()
     
@@ -98,7 +98,7 @@ def run_data_analysis(df):
     plt.pie(seasonal_units, labels=seasonal_units.index, autopct='%1.1f%%', startangle=130, colors=sns.color_palette('Set2'))
     plt.title("Total Units Sold by Seasonality")
     plt.tight_layout()
-    plt.savefig(output_dir / '02_seasonal_units_distribution.png')
+    plt.savefig(output_dir / '02_seasonal_units_distribution.jpeg')
     plt.close()
 
     # Chart 3: Top 10 Highest Demand Products
@@ -116,7 +116,7 @@ def run_data_analysis(df):
     plt.xlabel('Total Units Sold')
     plt.ylabel('Product ID')
     plt.tight_layout()
-    plt.savefig(output_dir / '03_top_demand_products.png')
+    plt.savefig(output_dir / '03_top_demand_products.jpeg')
     plt.close()
 
     # Chart 4: Daily Demand Trend & 7-Day Moving Average
@@ -131,7 +131,7 @@ def run_data_analysis(df):
     plt.ylabel('Units Sold')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(output_dir / '04_demand_trend_7day_moving_avg.png')
+    plt.savefig(output_dir / '04_demand_trend_7day_moving_avg.jpeg')
     plt.close()
 
     # Chart 5: Actual Demand vs Demand Forecast Accuracy
@@ -143,7 +143,7 @@ def run_data_analysis(df):
     plt.ylabel('Actual Units Sold')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(output_dir / '05_forecast_vs_actual.png')
+    plt.savefig(output_dir / '05_forecast_vs_actual.jpeg')
     plt.close()
 
     # Chart 6: High Demand Product Categories (Units Sold Count Ranking)
@@ -165,7 +165,7 @@ def run_data_analysis(df):
     plt.ylabel('Total Units Sold Count')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(output_dir / '06_high_demand_categories.png')
+    plt.savefig(output_dir / '06_high_demand_categories.jpeg')
     plt.close()
 
     print(f"\nAll 6 analysis charts successfully saved to: {output_dir}")

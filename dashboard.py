@@ -649,7 +649,7 @@ with chart_left:
 
         display_chart(
             fig,
-            "01_category_revenue.png",
+            "01_category_revenue.jpeg",
         )
 
 seasonal_units = (
@@ -685,7 +685,7 @@ with chart_right:
 
         display_chart(
             fig,
-            "02_seasonal_units_distribution.png",
+            "02_seasonal_units_distribution.jpeg",
         )
 
 top_10 = (
@@ -739,7 +739,7 @@ with chart_left:
 
         display_chart(
             fig,
-            "03_top_demand_products.png",
+            "03_top_demand_products.jpeg",
         )
 
 daily_demand = (
@@ -799,7 +799,7 @@ with chart_right:
 
         display_chart(
             fig,
-            "04_demand_trend_7day_moving_avg.png",
+            "04_demand_trend_7day_moving_avg.jpeg",
         )
 
 
@@ -864,7 +864,7 @@ with chart_left:
 
         display_chart(
             fig,
-            "05_forecast_vs_actual.png",
+            "05_forecast_vs_actual.jpeg",
         )
 
 
@@ -923,7 +923,7 @@ with chart_right:
 
         display_chart(
             fig,
-            "06_high_demand_categories.png",
+            "06_high_demand_categories.jpeg",
         )
 
 
@@ -983,7 +983,7 @@ with chart_left:
 
         display_chart(
             fig,
-            "07_region_revenue.png",
+            "07_region_revenue.jpeg",
         )
 
 with chart_right:
@@ -1048,7 +1048,7 @@ with chart_right:
 
     display_chart(
         fig,
-        "08_region_category_countplot.png",
+        "08_region_category_countplot.jpeg",
     )
 
 
