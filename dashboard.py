@@ -9,9 +9,6 @@ import seaborn as sns
 import streamlit as st
 
 
-# ==================================================
-# 1. PROJECT PATHS
-# ==================================================
 
 PROJECT_DIR = Path(__file__).resolve().parent
 
@@ -38,10 +35,6 @@ DATA_PATHS = [
 ]
 
 
-# ==================================================
-# 2. PAGE CONFIGURATION
-# ==================================================
-
 st.set_page_config(
     page_title="Retail Inventory Analytics",
     page_icon="📊",
@@ -51,9 +44,6 @@ st.set_page_config(
 sns.set_theme(style="whitegrid")
 
 
-# ==================================================
-# 3. DASHBOARD CSS
-# ==================================================
 
 st.markdown(
     """
@@ -170,11 +160,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
-# ==================================================
-# 4. HELPER FUNCTIONS
-# ==================================================
-
 def section_heading(title: str):
 
     st.markdown(
@@ -210,15 +195,6 @@ def display_chart(fig, filename: str):
 
     plt.close(fig)
 
-
-# ==================================================
-# 5. PDF VIEWER FUNCTION
-# ==================================================
-
-
-# ==================================================
-# PDF REPORT VIEWER - CHROME FRIENDLY
-# ==================================================
 
 def show_pdf_report():
 
@@ -272,9 +248,6 @@ def show_pdf_report():
         st.error(f"Unable to read the PDF report: {error}")
 
 
-# ==================================================
-# 6. TEAM INTRODUCTION POPUP
-# ==================================================
 
 if "team_popup_seen" not in st.session_state:
     st.session_state["team_popup_seen"] = False
@@ -327,11 +300,6 @@ if not st.session_state["team_popup_seen"]:
 
     show_team_popup()
 
-
-# ==================================================
-# 7. DASHBOARD HEADER AND NAVIGATION
-# ==================================================
-
 header_col, button_col = st.columns([5, 1])
 
 with header_col:
@@ -375,7 +343,7 @@ with button_col:
 
                 st.error(
                     "PDF not found. Put "
-                    "Retail_Inventory_Analytics_Final_Report.pdf "
+                    "Retail_Inventory_Analytics_Final_Report_22_Pages_Dashboard.pdf "
                     "in the same folder as dashboard.py."
                 )
 
@@ -394,20 +362,12 @@ with button_col:
 st.divider()
 
 
-# ==================================================
-# 8. OPEN PDF REPORT PAGE
-# ==================================================
-
 if st.session_state["current_page"] == "pdf":
 
     show_pdf_report()
 
     st.stop()
 
-
-# ==================================================
-# 9. LOAD CLEANED DATASET
-# ==================================================
 
 csv_path = next(
     (path for path in DATA_PATHS if path.is_file()),
@@ -435,10 +395,6 @@ except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
     st.stop()
 
 
-# ==================================================
-# 10. VALIDATE REQUIRED COLUMNS
-# ==================================================
-
 required_columns = {
     "Date",
     "Product ID",
@@ -465,10 +421,6 @@ if missing_columns:
 
     st.stop()
 
-
-# ==================================================
-# 11. DATA PREPARATION
-# ==================================================
 
 df["Date"] = pd.to_datetime(
     df["Date"],
@@ -519,11 +471,6 @@ df["Total Revenue"] = (
     * (1 - df["Discount"] / 100)
 )
 
-
-# ==================================================
-# 12. PRODUCT SUMMARY AND INVENTORY STATUS
-# ==================================================
-
 product_summary = (
     df.groupby("Product ID", dropna=False)
     .agg(
@@ -550,10 +497,6 @@ product_summary.loc[
 ] = "Over-stocked"
 
 
-# ==================================================
-# 13. FORECAST ERROR
-# ==================================================
-
 forecast_rows = df.dropna(
     subset=["Demand Forecast", "Units Sold"]
 )
@@ -568,11 +511,6 @@ else:
         forecast_rows["Units Sold"]
         - forecast_rows["Demand Forecast"]
     ).abs().mean()
-
-
-# ==================================================
-# 14. OVERVIEW
-# ==================================================
 
 section_heading("Overview")
 
@@ -611,11 +549,6 @@ with k4:
         "Forecast MAE",
         f"{mae:,.2f} units" if pd.notna(mae) else "N/A",
     )
-
-
-# ==================================================
-# 15. INVENTORY STATUS
-# ==================================================
 
 section_heading("Inventory Status")
 
@@ -659,19 +592,9 @@ st.caption(
     "is under-stocked; above 15 times is over-stocked."
 )
 
-
-# ==================================================
-# 16. CHARTS
-# ==================================================
-
 section_heading("Charts")
 
 chart_left, chart_right = st.columns(2)
-
-
-# --------------------------------------------------
-# CHART 1: REVENUE BY CATEGORY
-# --------------------------------------------------
 
 category_summary = (
     df.groupby("Category", as_index=False)["Total Revenue"]
@@ -729,11 +652,6 @@ with chart_left:
             "01_category_revenue.png",
         )
 
-
-# --------------------------------------------------
-# CHART 2: UNITS SOLD BY SEASONALITY
-# --------------------------------------------------
-
 seasonal_units = (
     df.groupby("Seasonality")["Units Sold"].sum()
 )
@@ -769,11 +687,6 @@ with chart_right:
             fig,
             "02_seasonal_units_distribution.png",
         )
-
-
-# --------------------------------------------------
-# CHART 3: TOP 10 DEMAND PRODUCTS
-# --------------------------------------------------
 
 top_10 = (
     product_summary
@@ -828,11 +741,6 @@ with chart_left:
             fig,
             "03_top_demand_products.png",
         )
-
-
-# --------------------------------------------------
-# CHART 4: DAILY DEMAND AND MOVING AVERAGE
-# --------------------------------------------------
 
 daily_demand = (
     df.groupby("Date")["Units Sold"]
@@ -894,10 +802,6 @@ with chart_right:
             "04_demand_trend_7day_moving_avg.png",
         )
 
-
-# --------------------------------------------------
-# CHART 5: FORECAST VS ACTUAL
-# --------------------------------------------------
 
 chart_left, chart_right = st.columns(2)
 
@@ -964,10 +868,6 @@ with chart_left:
         )
 
 
-# --------------------------------------------------
-# CHART 6: HIGH-DEMAND CATEGORIES
-# --------------------------------------------------
-
 category_demand = (
     df.groupby("Category")["Units Sold"]
     .sum()
@@ -1027,10 +927,6 @@ with chart_right:
         )
 
 
-# --------------------------------------------------
-# CHART 7: REGION-WISE TOTAL REVENUE
-# --------------------------------------------------
-
 region_summary = (
     df.groupby("Region")
     .agg(
@@ -1089,11 +985,6 @@ with chart_left:
             fig,
             "07_region_revenue.png",
         )
-
-
-# --------------------------------------------------
-# CHART 8: REGION-WISE CATEGORY COUNT PLOT
-# --------------------------------------------------
 
 with chart_right:
 
@@ -1161,9 +1052,6 @@ with chart_right:
     )
 
 
-# ==================================================
-# 17. PRODUCT DEMAND TABLES
-# ==================================================
 
 section_heading("Product Demand")
 
@@ -1244,11 +1132,6 @@ with tab3:
         use_container_width=True,
         hide_index=True,
     )
-
-
-# ==================================================
-# 18. FOOTER
-# ==================================================
 
 st.divider()
 
