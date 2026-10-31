@@ -1,4 +1,5 @@
-"""Simple Streamlit dashboard for Retail Inventory Analytics."""
+
+"""Retail Inventory Analytics Dashboard."""
 
 from pathlib import Path
 
@@ -8,24 +9,38 @@ import seaborn as sns
 import streamlit as st
 
 
-# --------------------------------------------------
-# 1. PROJECT PATHS AND CONFIGURATION
-# --------------------------------------------------
+# ==================================================
+# 1. PROJECT PATHS
+# ==================================================
 
 PROJECT_DIR = Path(__file__).resolve().parent
 
 OUTPUT_DIR = PROJECT_DIR / "outputs"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# PDF report location
+PDF_PATH_CANDIDATES = [
+    PROJECT_DIR / "Retail_Inventory_Analytics_Final_Report.pdf",
+    Path(
+        r"C:\Users\HP\OneDrive\Desktop\Inventory_Demand_Forecasting\project\Inventory_Forecast\Retail_Inventory_Analytics_Final_Report.pdf"
+    ),
+]
+
+PDF_PATH = next(
+    (path for path in PDF_PATH_CANDIDATES if path.is_file()),
+    PDF_PATH_CANDIDATES[0],
+)
+
+# Dataset locations
 DATA_PATHS = [
     PROJECT_DIR / "data" / "cleandata" / "retail_store_inventory_cleaned.csv",
     PROJECT_DIR / "outputs" / "retail_store_inventory_cleaned.csv",
 ]
 
 
-# --------------------------------------------------
+# ==================================================
 # 2. PAGE CONFIGURATION
-# --------------------------------------------------
+# ==================================================
 
 st.set_page_config(
     page_title="Retail Inventory Analytics",
@@ -36,13 +51,14 @@ st.set_page_config(
 sns.set_theme(style="whitegrid")
 
 
-# --------------------------------------------------
-# 3. DASHBOARD STYLING
-# --------------------------------------------------
+# ==================================================
+# 3. DASHBOARD CSS
+# ==================================================
 
 st.markdown(
     """
     <style>
+
         .stApp,
         [data-testid="stAppViewContainer"],
         [data-testid="stMain"] {
@@ -55,18 +71,13 @@ st.markdown(
         }
 
         .block-container {
+            max-width: 1400px;
             padding-top: 1.5rem;
             padding-bottom: 2rem;
-            max-width: 1400px;
         }
 
-        h1, h2, h3,
-        [data-testid="stHeading"] h1,
-        [data-testid="stHeading"] h2,
-        [data-testid="stHeading"] h3 {
+        h1, h2, h3 {
             color: #172033 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
         }
 
         .section-heading {
@@ -82,8 +93,6 @@ st.markdown(
             font-size: 22px;
             font-weight: 700;
             line-height: 1.4;
-            opacity: 1 !important;
-            visibility: visible !important;
         }
 
         .metric-card {
@@ -93,14 +102,12 @@ st.markdown(
             background: #ffffff !important;
             border: 1px solid #d9dfe7;
             border-radius: 6px;
-            color: #172033 !important;
         }
 
         .metric-label {
             color: #4b5563 !important;
             font-size: 14px;
             margin-bottom: 8px;
-            opacity: 1 !important;
         }
 
         .metric-value {
@@ -108,7 +115,6 @@ st.markdown(
             font-size: 25px;
             font-weight: 700;
             line-height: 1.25;
-            opacity: 1 !important;
         }
 
         [data-testid="stMarkdownContainer"] p,
@@ -117,24 +123,59 @@ st.markdown(
         [data-baseweb="tab"],
         [data-testid="stSelectbox"] label {
             color: #344054 !important;
-            opacity: 1 !important;
         }
 
         hr {
             border-color: #d9dfe7 !important;
         }
+
+        /* LIGHT TEAM POPUP */
+
+        [role="dialog"] {
+            background: #ffffff !important;
+            border: 1px solid #dbe4ef !important;
+            border-radius: 14px !important;
+        }
+
+        [role="dialog"] h1,
+        [role="dialog"] h2,
+        [role="dialog"] h3,
+        [role="dialog"] p,
+        [role="dialog"] li,
+        [role="dialog"] strong,
+        [role="dialog"] code {
+            color: #24364b !important;
+        }
+
+        [role="dialog"] code {
+            background: #f1f5f9 !important;
+            border-radius: 4px;
+            padding: 2px 5px;
+        }
+
+        [role="dialog"] button {
+            background: #eaf1f9 !important;
+            color: #24364b !important;
+            border: 1px solid #cbd8e8 !important;
+            border-radius: 7px !important;
+        }
+
+        [role="dialog"] button:hover {
+            background: #dbe8f5 !important;
+            color: #172033 !important;
+        }
+
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 
-# --------------------------------------------------
+# ==================================================
 # 4. HELPER FUNCTIONS
-# --------------------------------------------------
+# ==================================================
 
-def section_heading(title: str) -> None:
-    """Display a clearly visible section heading."""
+def section_heading(title: str):
 
     st.markdown(
         f'<div class="section-heading">{title}</div>',
@@ -142,8 +183,7 @@ def section_heading(title: str) -> None:
     )
 
 
-def metric_card(label: str, value: str) -> None:
-    """Display a simple metric card with readable text."""
+def metric_card(label: str, value: str):
 
     st.markdown(
         f"""
@@ -156,8 +196,7 @@ def metric_card(label: str, value: str) -> None:
     )
 
 
-def display_chart(fig, filename: str) -> None:
-    """Save and display a chart."""
+def display_chart(fig, filename: str):
 
     fig.tight_layout()
 
@@ -168,49 +207,237 @@ def display_chart(fig, filename: str) -> None:
     )
 
     st.pyplot(fig, use_container_width=True)
+
     plt.close(fig)
 
 
-# --------------------------------------------------
-# 5. DASHBOARD HEADER
-# --------------------------------------------------
+# ==================================================
+# 5. PDF VIEWER FUNCTION
+# ==================================================
 
-st.title("Retail Inventory Analytics")
 
-st.caption(
-    "Sales, demand, inventory status and forecast performance"
-)
+# ==================================================
+# PDF REPORT VIEWER - CHROME FRIENDLY
+# ==================================================
+
+def show_pdf_report():
+
+    st.title("Retail Inventory Analytics Report")
+
+    st.caption(
+        "Cronus Consultants | Final Project Report"
+    )
+
+    if not PDF_PATH.is_file():
+
+        st.error("PDF Report not found!")
+
+        st.info(
+            f"Expected location: {PDF_PATH}"
+        )
+
+        return
+
+    try:
+
+        # Native Streamlit PDF viewer
+        st.pdf(
+            PDF_PATH,
+            height=950,
+            key="retail_inventory_report",
+            alt="Retail Inventory Analytics Final Report"
+        )
+
+        st.download_button(
+            label="⬇ Download PDF Report",
+            data=PDF_PATH.read_bytes(),
+            file_name=PDF_PATH.name,
+            mime="application/pdf",
+            use_container_width=True
+        )
+
+    except Exception as error:
+
+        st.error(f"PDF Viewer Error: {error}")
+
+        st.download_button(
+            "Download Report Instead",
+            data=PDF_PATH.read_bytes(),
+            file_name=PDF_PATH.name,
+            mime="application/pdf"
+        )
+
+    except OSError as error:
+
+        st.error(f"Unable to read the PDF report: {error}")
+
+
+# ==================================================
+# 6. TEAM INTRODUCTION POPUP
+# ==================================================
+
+if "team_popup_seen" not in st.session_state:
+    st.session_state["team_popup_seen"] = False
+
+if "current_page" not in st.session_state:
+    st.session_state["current_page"] = "dashboard"
+
+
+@st.dialog("Cronus Consultants", width="large")
+def show_team_popup():
+
+    st.markdown("### Project Team Members")
+
+    st.markdown(
+        """
+        1. **Arnab Halder** — `430124010155`
+
+        2. **Sagnik Paul** — `430124010152`
+
+        3. **Adarsh Raj** — `430124010161`
+
+        4. **Shristi Kumari Agarwal** — `430124020248`
+
+        5. **Shashwato Bose** — `430124010150`
+
+        6. **Anshudip Bar** — `430124010158`
+
+        7. **Shivani Singh** — `430124020252`
+        """
+    )
+
+    st.divider()
+
+    st.caption(
+        "Click below to continue to the dashboard."
+    )
+
+    if st.button(
+        "Continue to Dashboard",
+        type="primary",
+        use_container_width=True,
+    ):
+
+        st.session_state["team_popup_seen"] = True
+
+        st.rerun()
+
+
+if not st.session_state["team_popup_seen"]:
+
+    show_team_popup()
+
+
+# ==================================================
+# 7. DASHBOARD HEADER AND NAVIGATION
+# ==================================================
+
+header_col, button_col = st.columns([5, 1])
+
+with header_col:
+
+    if st.session_state["current_page"] == "pdf":
+
+        st.title("Retail Inventory Analytics — Project Report")
+
+        st.caption(
+            "Cronus Consultants | Final Project Report"
+        )
+
+    else:
+
+        st.title("Retail Inventory Analytics")
+
+        st.caption(
+            "Sales, demand, inventory status and forecast performance"
+        )
+
+
+with button_col:
+
+    st.write("")
+
+    if st.session_state["current_page"] == "dashboard":
+
+        if st.button(
+            "📄 Open Report",
+            type="primary",
+            use_container_width=True,
+        ):
+
+            if PDF_PATH.is_file():
+
+                st.session_state["current_page"] = "pdf"
+
+                st.rerun()
+
+            else:
+
+                st.error(
+                    "PDF not found. Put "
+                    "Retail_Inventory_Analytics_Final_Report.pdf "
+                    "in the same folder as dashboard.py."
+                )
+
+    else:
+
+        if st.button(
+            "← Dashboard",
+            use_container_width=True,
+        ):
+
+            st.session_state["current_page"] = "dashboard"
+
+            st.rerun()
+
 
 st.divider()
 
 
-# --------------------------------------------------
-# 6. LOAD CLEANED DATASET
-# --------------------------------------------------
+# ==================================================
+# 8. OPEN PDF REPORT PAGE
+# ==================================================
+
+if st.session_state["current_page"] == "pdf":
+
+    show_pdf_report()
+
+    st.stop()
+
+
+# ==================================================
+# 9. LOAD CLEANED DATASET
+# ==================================================
 
 csv_path = next(
-    (path for path in DATA_PATHS if path.exists()),
+    (path for path in DATA_PATHS if path.is_file()),
     None,
 )
 
 if csv_path is None:
-    st.warning(
-        "Cleaned data was not found. Run python main.py first, "
-        "then make sure the cleaned CSV is included in GitHub."
+
+    st.error(
+        "Cleaned dataset was not found. Checked these locations:\n\n"
+        + "\n".join(str(path) for path in DATA_PATHS)
     )
+
     st.stop()
+
 
 try:
+
     df = pd.read_csv(csv_path)
 
-except (OSError, pd.errors.ParserError, UnicodeDecodeError) as exc:
-    st.error(f"Could not read the cleaned dataset: {exc}")
+except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
+
+    st.error(f"Could not read the cleaned dataset: {error}")
+
     st.stop()
 
 
-# --------------------------------------------------
-# 7. VALIDATE REQUIRED COLUMNS
-# --------------------------------------------------
+# ==================================================
+# 10. VALIDATE REQUIRED COLUMNS
+# ==================================================
 
 required_columns = {
     "Date",
@@ -230,16 +457,18 @@ missing_columns = sorted(
 )
 
 if missing_columns:
+
     st.error(
         "The cleaned dataset is missing required columns: "
         + ", ".join(missing_columns)
     )
+
     st.stop()
 
 
-# --------------------------------------------------
-# 8. DATA PREPARATION
-# --------------------------------------------------
+# ==================================================
+# 11. DATA PREPARATION
+# ==================================================
 
 df["Date"] = pd.to_datetime(
     df["Date"],
@@ -257,6 +486,7 @@ numeric_columns = [
 ]
 
 for column in numeric_columns:
+
     df[column] = pd.to_numeric(
         df[column],
         errors="coerce",
@@ -265,6 +495,7 @@ for column in numeric_columns:
 df["Category"] = df["Category"].fillna("Unknown")
 df["Seasonality"] = df["Seasonality"].fillna("Unknown")
 df["Product ID"] = df["Product ID"].fillna("Unknown")
+df["Region"] = df["Region"].fillna("Unknown")
 df["Discount"] = df["Discount"].fillna(0)
 
 df = df.dropna(
@@ -272,12 +503,16 @@ df = df.dropna(
 ).copy()
 
 if df.empty:
+
     st.warning(
         "There are no valid dated sales records in the dataset."
     )
+
     st.stop()
 
-# Calculate revenue using existing dataset columns.
+
+# Calculate revenue
+
 df["Total Revenue"] = (
     df["Units Sold"]
     * df["Price"]
@@ -285,9 +520,9 @@ df["Total Revenue"] = (
 )
 
 
-# --------------------------------------------------
-# 9. PRODUCT SUMMARY AND INVENTORY STATUS
-# --------------------------------------------------
+# ==================================================
+# 12. PRODUCT SUMMARY AND INVENTORY STATUS
+# ==================================================
 
 product_summary = (
     df.groupby("Product ID", dropna=False)
@@ -315,63 +550,72 @@ product_summary.loc[
 ] = "Over-stocked"
 
 
-# --------------------------------------------------
-# 10. FORECAST ERROR
-# --------------------------------------------------
+# ==================================================
+# 13. FORECAST ERROR
+# ==================================================
 
 forecast_rows = df.dropna(
     subset=["Demand Forecast", "Units Sold"]
 )
 
 if forecast_rows.empty:
+
     mae = float("nan")
+
 else:
+
     mae = (
         forecast_rows["Units Sold"]
         - forecast_rows["Demand Forecast"]
     ).abs().mean()
 
 
-# --------------------------------------------------
-# 11. OVERVIEW
-# --------------------------------------------------
+# ==================================================
+# 14. OVERVIEW
+# ==================================================
 
 section_heading("Overview")
 
 total_revenue = df["Total Revenue"].sum()
+
 total_units = df["Units Sold"].sum()
+
 average_price = df["Price"].mean()
 
 k1, k2, k3, k4 = st.columns(4)
 
 with k1:
+
     metric_card(
         "Total Revenue",
         f"${total_revenue:,.2f}",
     )
 
 with k2:
+
     metric_card(
         "Units Sold",
         f"{total_units:,.0f}",
     )
 
 with k3:
+
     metric_card(
         "Average Unit Price",
         f"${average_price:,.2f}",
     )
 
 with k4:
+
     metric_card(
         "Forecast MAE",
         f"{mae:,.2f} units" if pd.notna(mae) else "N/A",
     )
 
 
-# --------------------------------------------------
-# 12. INVENTORY STATUS
-# --------------------------------------------------
+# ==================================================
+# 15. INVENTORY STATUS
+# ==================================================
 
 section_heading("Inventory Status")
 
@@ -390,18 +634,21 @@ over_count = int(
 s1, s2, s3 = st.columns(3)
 
 with s1:
+
     metric_card(
         "Under-stocked Products",
         f"{under_count:,}",
     )
 
 with s2:
+
     metric_card(
         "Optimal Stock",
         f"{optimal_count:,}",
     )
 
 with s3:
+
     metric_card(
         "Over-stocked Products",
         f"{over_count:,}",
@@ -413,16 +660,17 @@ st.caption(
 )
 
 
-# --------------------------------------------------
-# 13. CHARTS
-# --------------------------------------------------
+# ==================================================
+# 16. CHARTS
+# ==================================================
 
 section_heading("Charts")
 
 chart_left, chart_right = st.columns(2)
 
 
-# Chart 1: Revenue by Category
+# --------------------------------------------------
+# CHART 1: REVENUE BY CATEGORY
 # --------------------------------------------------
 
 category_summary = (
@@ -432,14 +680,17 @@ category_summary = (
 )
 
 with chart_left:
+
     st.markdown(
         "**Total Revenue Distribution by Product Category**"
     )
 
     if category_summary.empty:
+
         st.info("No category revenue data is available.")
 
     else:
+
         fig, ax = plt.subplots(figsize=(10, 5))
 
         sns.barplot(
@@ -453,6 +704,7 @@ with chart_left:
         )
 
         for container in ax.containers:
+
             ax.bar_label(
                 container,
                 fmt="%.2f",
@@ -463,8 +715,10 @@ with chart_left:
         ax.set_title(
             "Total Revenue Distribution by Product Category"
         )
+
         ax.set_xlabel("Category")
         ax.set_ylabel("Total Revenue ($)")
+
         ax.tick_params(
             axis="x",
             labelrotation=45,
@@ -476,7 +730,8 @@ with chart_left:
         )
 
 
-# Chart 2: Units Sold by Seasonality
+# --------------------------------------------------
+# CHART 2: UNITS SOLD BY SEASONALITY
 # --------------------------------------------------
 
 seasonal_units = (
@@ -484,14 +739,17 @@ seasonal_units = (
 )
 
 with chart_right:
+
     st.markdown(
         "**Total Units Sold by Seasonality**"
     )
 
     if seasonal_units.empty or seasonal_units.sum() == 0:
+
         st.info("No seasonal sales data is available.")
 
     else:
+
         fig, ax = plt.subplots(figsize=(6, 6))
 
         ax.pie(
@@ -513,13 +771,14 @@ with chart_right:
         )
 
 
-# Chart 3: Top 10 Demand Products
+# --------------------------------------------------
+# CHART 3: TOP 10 DEMAND PRODUCTS
 # --------------------------------------------------
 
 top_10 = (
     product_summary
     .sort_values(
-        by="Total_Demand",
+        "Total_Demand",
         ascending=False,
     )
     .head(10)
@@ -528,12 +787,17 @@ top_10 = (
 chart_left, chart_right = st.columns(2)
 
 with chart_left:
-    st.markdown("**Top 10 Highest Demand Products**")
+
+    st.markdown(
+        "**Top 10 Highest Demand Products**"
+    )
 
     if top_10.empty:
+
         st.info("No product demand data is available.")
 
     else:
+
         fig, ax = plt.subplots(figsize=(12, 6))
 
         sns.barplot(
@@ -547,6 +811,7 @@ with chart_left:
         )
 
         for container in ax.containers:
+
             ax.bar_label(
                 container,
                 fmt="%.0f",
@@ -555,6 +820,7 @@ with chart_left:
             )
 
         ax.set_title("Top 10 Highest Demand Products")
+
         ax.set_xlabel("Total Units Sold")
         ax.set_ylabel("Product ID")
 
@@ -564,7 +830,8 @@ with chart_left:
         )
 
 
-# Chart 4: Daily Demand and Moving Average
+# --------------------------------------------------
+# CHART 4: DAILY DEMAND AND MOVING AVERAGE
 # --------------------------------------------------
 
 daily_demand = (
@@ -584,14 +851,17 @@ daily_demand["7_Day_Moving_Avg"] = (
 )
 
 with chart_right:
+
     st.markdown(
         "**Daily Total Demand with 7-Day Moving Average**"
     )
 
     if daily_demand.empty:
+
         st.info("No daily demand data is available.")
 
     else:
+
         fig, ax = plt.subplots(figsize=(12, 6))
 
         ax.plot(
@@ -613,8 +883,10 @@ with chart_right:
         ax.set_title(
             "Daily Total Demand with 7-Day Moving Average"
         )
+
         ax.set_xlabel("Date")
         ax.set_ylabel("Units Sold")
+
         ax.legend()
 
         display_chart(
@@ -623,12 +895,14 @@ with chart_right:
         )
 
 
-# Chart 5: Forecast vs Actual
+# --------------------------------------------------
+# CHART 5: FORECAST VS ACTUAL
 # --------------------------------------------------
 
 chart_left, chart_right = st.columns(2)
 
 with chart_left:
+
     st.markdown(
         "**Baseline Demand Forecast vs Actual Units Sold**"
     )
@@ -638,11 +912,13 @@ with chart_left:
     ).copy()
 
     if df_forecast.empty:
+
         st.info(
             "No data is available for forecast comparison."
         )
 
     else:
+
         sample_data = df_forecast.sample(
             n=min(1000, len(df_forecast)),
             random_state=42,
@@ -665,6 +941,7 @@ with chart_left:
         )
 
         if pd.notna(max_value) and max_value > 0:
+
             ax.plot(
                 [0, max_value],
                 [0, max_value],
@@ -675,8 +952,10 @@ with chart_left:
         ax.set_title(
             "Baseline Demand Forecast vs Actual Units Sold"
         )
+
         ax.set_xlabel("Baseline Forecasted Demand")
         ax.set_ylabel("Actual Units Sold")
+
         ax.legend()
 
         display_chart(
@@ -685,7 +964,8 @@ with chart_left:
         )
 
 
-# Chart 6: High-Demand Categories
+# --------------------------------------------------
+# CHART 6: HIGH-DEMAND CATEGORIES
 # --------------------------------------------------
 
 category_demand = (
@@ -693,18 +973,23 @@ category_demand = (
     .sum()
     .reset_index()
     .sort_values(
-        by="Units Sold",
+        "Units Sold",
         ascending=False,
     )
 )
 
 with chart_right:
-    st.markdown("**High-Demand Product Categories**")
+
+    st.markdown(
+        "**High-Demand Product Categories**"
+    )
 
     if category_demand.empty:
+
         st.info("No category demand data is available.")
 
     else:
+
         fig, ax = plt.subplots(figsize=(10, 6))
 
         sns.barplot(
@@ -718,6 +1003,7 @@ with chart_right:
         )
 
         for container in ax.containers:
+
             ax.bar_label(
                 container,
                 fmt="%.0f",
@@ -726,8 +1012,10 @@ with chart_right:
             )
 
         ax.set_title("High-Demand Product Categories")
+
         ax.set_xlabel("Product Category")
         ax.set_ylabel("Total Units Sold")
+
         ax.tick_params(
             axis="x",
             labelrotation=45,
@@ -739,7 +1027,8 @@ with chart_right:
         )
 
 
-# Chart 7: Region-wise Total Revenue (Bar Chart)
+# --------------------------------------------------
+# CHART 7: REGION-WISE TOTAL REVENUE
 # --------------------------------------------------
 
 region_summary = (
@@ -750,7 +1039,7 @@ region_summary = (
     )
     .reset_index()
     .sort_values(
-        by="Total_Revenue",
+        "Total_Revenue",
         ascending=False,
     )
 )
@@ -758,32 +1047,41 @@ region_summary = (
 chart_left, chart_right = st.columns(2)
 
 with chart_left:
-    st.markdown("**Total Revenue Performance by Region**")
+
+    st.markdown(
+        "**Total Revenue Performance by Region**"
+    )
 
     if region_summary.empty:
+
         st.info("No regional revenue data is available.")
 
     else:
+
         fig, ax = plt.subplots(figsize=(8, 5))
 
         sns.barplot(
             data=region_summary,
             x="Region",
             y="Total_Revenue",
-            palette="crest",
             hue="Region",
+            palette="crest",
             legend=False,
             ax=ax,
         )
 
         for container in ax.containers:
+
             ax.bar_label(
                 container,
                 fmt="%.0f",
                 padding=2,
             )
 
-        ax.set_title("Total Revenue Performance by Region")
+        ax.set_title(
+            "Total Revenue Performance by Region"
+        )
+
         ax.set_xlabel("Region")
         ax.set_ylabel("Total Revenue ($)")
 
@@ -793,26 +1091,50 @@ with chart_left:
         )
 
 
-# Chart 8: Region-wise Product Category Count Plot
+# --------------------------------------------------
+# CHART 8: REGION-WISE CATEGORY COUNT PLOT
 # --------------------------------------------------
 
 with chart_right:
+
     st.markdown(
         "**Transaction Count by Region and Product Category**"
     )
 
     fig, ax = plt.subplots(figsize=(12, 6))
 
+    known_region_order = [
+        "East",
+        "North",
+        "South",
+        "West",
+    ]
+
+    existing_regions = set(
+        df["Region"].dropna().unique()
+    )
+
+    region_order = [
+        region
+        for region in known_region_order
+        if region in existing_regions
+    ]
+
+    region_order += sorted(
+        existing_regions - set(region_order)
+    )
+
     sns.countplot(
         data=df,
         x="Region",
         hue="Category",
         palette="Set2",
-        order=["East", "North", "South", "West"],
+        order=region_order or None,
         ax=ax,
     )
 
     for container in ax.containers:
+
         ax.bar_label(
             container,
             fmt="%.0f",
@@ -823,6 +1145,7 @@ with chart_right:
     ax.set_title(
         "Transaction Count Distribution by Region and Product Category"
     )
+
     ax.set_xlabel("Region")
     ax.set_ylabel("Number of Transactions")
 
@@ -838,9 +1161,9 @@ with chart_right:
     )
 
 
-# --------------------------------------------------
-# 14. PRODUCT DEMAND TABLES
-# --------------------------------------------------
+# ==================================================
+# 17. PRODUCT DEMAND TABLES
+# ==================================================
 
 section_heading("Product Demand")
 
@@ -856,6 +1179,7 @@ tab1, tab2, tab3 = st.tabs(
 # Highest-demand products
 
 with tab1:
+
     st.dataframe(
         product_summary
         .sort_values(
@@ -872,6 +1196,7 @@ with tab1:
 # Lowest-demand products
 
 with tab2:
+
     st.dataframe(
         product_summary
         .sort_values(
@@ -888,6 +1213,7 @@ with tab2:
 # Stock status filter
 
 with tab3:
+
     status_filter = st.selectbox(
         "Filter by stock status",
         [
@@ -899,9 +1225,11 @@ with tab3:
     )
 
     if status_filter == "All":
+
         shown_products = product_summary
 
     else:
+
         shown_products = product_summary[
             product_summary["Stock Status"] == status_filter
         ]
@@ -918,9 +1246,9 @@ with tab3:
     )
 
 
-# --------------------------------------------------
-# 15. FOOTER
-# --------------------------------------------------
+# ==================================================
+# 18. FOOTER
+# ==================================================
 
 st.divider()
 
