@@ -311,6 +311,67 @@ def make_table(rows, widths=None, header=True, font_size=7.2):
     return tbl
 
 
+def make_student_table():
+    """Keep the existing table style and add each student's signature."""
+    signature_files = {
+        "Arnab Halder": "arnab.jpeg",
+        "Sagnik Paul": "sagnik.jpeg",
+        "Adarsh Raj": "adarsh.jpg",
+        "Shristi Kumari Agarwal": "shristi.jpeg",
+        "Shashwato Bose": "shaswato.jpeg",
+        "Anshudip Bar": "anshudip.jpeg",
+        "Shivani Singh": "shivani.jpeg",
+    }
+
+    rows = [[
+        Paragraph("Student Name", styles["TableHeadReport"]),
+        Paragraph("Roll Number", styles["TableHeadReport"]),
+        Paragraph("Registration Number", styles["TableHeadReport"]),
+        Paragraph("Signature", styles["TableHeadReport"]),
+    ]]
+
+    for student in STUDENTS:
+        signature_path = BASE_DIR / "signatures" / signature_files[student["name"]]
+        if signature_path.exists():
+            signature = Image(str(signature_path))
+            signature._restrictSize(1.8 * cm, 0.55 * cm)
+        else:
+            signature = Paragraph("Not found", styles["TableCellReport"])
+
+        rows.append([
+            Paragraph(safe(student["name"]), styles["TableCellReport"]),
+            Paragraph(safe(student["roll"]), styles["TableCellReport"]),
+            Paragraph(safe(student["registration"]), styles["TableCellReport"]),
+            signature,
+        ])
+
+    tbl = Table(
+        rows,
+        colWidths=[4.2 * cm, 3.8 * cm, 5.0 * cm, 3.0 * cm],
+        repeatRows=1,
+        hAlign="LEFT",
+    )
+    commands = [
+        ("GRID", (0, 0), (-1, -1), 0.35, BORDER),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+    ]
+    if len(rows) > 1:
+        commands.append(("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, PALE_GREY]))
+    tbl.setStyle(TableStyle(commands))
+    return tbl
+
+
+# Enter the mentor's actual name below and place their signature image at:
+# signatures/mentor.jpeg
+MENTOR_NAME = "Subhashish Banerjee"
+MENTOR_SIGNATURE = BASE_DIR / "signatures" / "mentor.jpg"
+
+
 def make_sample_table(rows, widths):
     """Compact table style for showing the first six raw-data records."""
     sample_head = ParagraphStyle(
@@ -423,6 +484,25 @@ def draw_page(canvas, doc):
         w - 1.7 * cm, 0.98 * cm,
         f"Page {doc.page}"
     )
+
+    # Mentor name and signature on the first page only.
+    if doc.page == 1:
+        mentor_y = 2.2 * cm
+        canvas.setFont("Helvetica-Bold", 9)
+        canvas.setFillColor(NAVY)
+        canvas.drawString(1.7 * cm, mentor_y, "Mentor: " + MENTOR_NAME)
+
+        if MENTOR_SIGNATURE.exists():
+            canvas.drawImage(
+                str(MENTOR_SIGNATURE),
+                8.2 * cm,
+                mentor_y - 0.18 * cm,
+                width=2.4 * cm,
+                height=0.75 * cm,
+                preserveAspectRatio=True,
+                anchor="c",
+                mask="auto",
+            )
 
     canvas.restoreState()
 
@@ -546,10 +626,7 @@ def build_report():
     ))
     story.append(Spacer(1, 0.65 * cm))
     story.append(Paragraph("SUBMITTED BY", styles["CoverLabel"]))
-    student_rows = [["Student Name", "Roll Number", "Registration Number"]]
-    for s in STUDENTS:
-        student_rows.append([s["name"], s["roll"], s["registration"]])
-    story.append(make_table(student_rows, [5.3 * cm, 4.8 * cm, 5.9 * cm]))
+    story.append(make_student_table())
     story.append(Spacer(1, 0.65 * cm))
     story.append(Paragraph(safe(DEPARTMENT), styles["CenterReport"]))
     story.append(Paragraph(safe(INSTITUTE), styles["CenterReport"]))
@@ -679,6 +756,7 @@ def build_report():
             "|   |-- data_cleaning.py",
             "|   |-- analysis.py",
             "|-- outputs/",
+            "|-- signatures/",
             "|-- dashboard.py",
             "|-- main.py",
             "|-- generate_report.py",
