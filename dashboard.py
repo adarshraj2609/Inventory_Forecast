@@ -369,30 +369,72 @@ if st.session_state["current_page"] == "pdf":
     st.stop()
 
 
-csv_path = next(
-    (path for path in DATA_PATHS if path.is_file()),
-    None,
+# csv_path = next(
+#     (path for path in DATA_PATHS if path.is_file()),
+#     None,
+# )
+
+# if csv_path is None:
+
+#     st.error(
+#         "Cleaned dataset was not found. Checked these locations:\n\n"
+#         + "\n".join(str(path) for path in DATA_PATHS)
+#     )
+
+#     st.stop()
+
+
+# try:
+
+#     df = pd.read_csv(csv_path)
+
+# except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
+
+#     st.error(f"Could not read the cleaned dataset: {error}")
+
+#     st.stop()
+
+
+# Dataset Upload Section
+
+st.markdown(" Upload Your Dataset")
+
+uploaded_file = st.file_uploader(
+    "Choose a CSV dataset from your computer",
+    type=["csv"],
+    help="Upload your own CSV dataset to analyse it on the dashboard."
 )
 
-if csv_path is None:
+if uploaded_file is not None:
+    try:
+        df = pd.read_csv(uploaded_file)
+        st.success(f"Dataset uploaded successfully: {uploaded_file.name}")
 
-    st.error(
-        "Cleaned dataset was not found. Checked these locations:\n\n"
-        + "\n".join(str(path) for path in DATA_PATHS)
+    except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
+        st.error(f"Could not read the uploaded dataset: {error}")
+        st.stop()
+
+else:
+    # Load the default dataset if no file is uploaded
+    csv_path = next(
+        (path for path in DATA_PATHS if path.is_file()),
+        None,
     )
 
-    st.stop()
+    if csv_path is None:
+        st.error(
+            "Cleaned dataset was not found. Checked these locations:\n\n"
+            + "\n".join(str(path) for path in DATA_PATHS)
+        )
+        st.stop()
 
+    try:
+        df = pd.read_csv(csv_path)
 
-try:
+    except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
+        st.error(f"Could not read the cleaned dataset: {error}")
+        st.stop()
 
-    df = pd.read_csv(csv_path)
-
-except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
-
-    st.error(f"Could not read the cleaned dataset: {error}")
-
-    st.stop()
 
 
 required_columns = {
